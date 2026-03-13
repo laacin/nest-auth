@@ -1,10 +1,10 @@
-export type User = UserCreds & UserSecurity & UserMetadata;
+export type User = UserCred & UserSecurity & UserMetadata;
 
-export interface UserCreds {
+export interface UserCred {
   id: string;
   email: string;
-  password: string;
   username: string;
+  password: string;
 }
 
 export interface UserSecurity {
