@@ -1,5 +1,5 @@
 import { TwoFactorService } from '@app/services/2fa.service';
-import { CachingService } from '@app/services/caching.service.js';
+import { CachingService } from '@app/services/caching.service';
 import { TokenService } from '@app/services/token.service';
 import { ROLE, User } from '@domain/entities/user.entity';
 import type { UserRepo } from '@domain/repos/user.repo';

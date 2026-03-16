@@ -6,6 +6,7 @@ import { readFileSync } from 'fs';
 export interface AppConfig {
   dependencies: DynamicModule[];
   key: SignKey;
+  appName: string;
 }
 
 type SignKey =
