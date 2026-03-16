@@ -8,12 +8,23 @@ export class MainModule {
   static forRoot(): DynamicModule {
     const infraModule = InfraModule.forRoot({
       dependencies: [],
-      mongoUri: 'mongodb://localhost:27017/authdb',
+      mongo: {
+        host: 'localhost',
+        port: 27017,
+        db: 'authdb',
+      },
+      redis: {
+        host: 'localhost',
+        port: 6379,
+        password: 'password',
+        db: 0,
+      },
     });
 
     const appModule = AppModule.forRoot({
       dependencies: [infraModule],
       key: { algorithm: 'HMAC', secretKey: 'secretKey' },
+      appName: 'MyApp',
     });
 
     const adapterModule = AdapterModule.forRoot({
