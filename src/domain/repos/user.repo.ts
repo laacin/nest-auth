@@ -5,4 +5,5 @@ export interface UserRepo {
 
   exists(cred: Partial<UserCred>): Promise<boolean>;
   get(cred: Partial<UserCred>): Promise<User | undefined>;
+  update(userId: string, updates: Partial<User>): Promise<void>;
 }
