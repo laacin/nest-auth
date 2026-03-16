@@ -1,4 +1,8 @@
 import { z } from 'zod';
+import type {
+  RegisterIn,
+  StdLoginIn,
+} from '@app/use-cases/auth.use-case.types';
 
 const RegisterSchema = z.object({
   email: z.email(),
@@ -14,11 +18,11 @@ const LoginSchema = z.object({
 });
 
 export class AuthValidator {
-  static register(data: unknown) {
+  static register(data: unknown): RegisterIn {
     return RegisterSchema.parse(data);
   }
 
-  static login(data: unknown) {
+  static login(data: unknown): StdLoginIn {
     const { identifier, password } = LoginSchema.parse(data);
     const isEmail = z.email().safeParse(identifier).success;
 
