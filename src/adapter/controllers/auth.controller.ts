@@ -19,7 +19,7 @@ export class AuthController {
   async postLogin(@UseContext() { req, res }: ContextHTTP) {
     const dto = AuthValidator.login(req.body);
 
-    const response = await this.use.login(dto);
+    const response = await this.use.stdLogin(dto);
     res.status(201).send({ ok: true, response });
   }
 }
