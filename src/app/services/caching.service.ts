@@ -7,7 +7,7 @@ const OTP = 'otp';
 
 // abstraction
 export interface ICachingService {
-  store(key: string, ttlMS: number): Promise<void>;
+  store(key: string, ttl: number): Promise<void>;
   get(key: string): Promise<number | null>; // returns ttl or null if doesn't exist
   remove(key: string): Promise<void>;
 }
@@ -18,9 +18,9 @@ export class CachingService {
     @Inject(CACHING_SERVICE) private readonly cache: ICachingService,
   ) {}
 
-  async revokeToken(token: string, ttlMS: number) {
+  async revokeToken(token: string, ttl: number) {
     const key = prefix(TOKEN, token);
-    await this.cache.store(key, ttlMS);
+    await this.cache.store(key, ttl);
   }
 
   async isRevoked(token: string) {
@@ -29,9 +29,9 @@ export class CachingService {
     return result !== null;
   }
 
-  async setOtpPending(userId: string, ttlMS: number) {
+  async setOtpPending(userId: string, ttl: number) {
     const key = prefix(OTP, userId);
-    await this.cache.store(key, ttlMS);
+    await this.cache.store(key, ttl);
   }
 
   async isOtpPending(userId: string) {
