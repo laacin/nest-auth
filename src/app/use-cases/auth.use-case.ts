@@ -49,10 +49,8 @@ export class AuthUseCase {
 
   async login({ id, email, username, password }: LoginParams) {
     const user = await this.userRepo.get({ id, email, username });
-    if (!user) throw new Error('invalid user');
-
-    if (!(await verify(user.password, password))) {
-      throw new Error('password');
+    if (!user || !(await verify(user.password, password))) {
+      throw new Error('invalid user or password');
     }
 
     const [access, refresh] = await this.token.create(user);
