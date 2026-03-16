@@ -16,8 +16,8 @@ export class UserRepoImpl implements UserRepo {
   }
 
   async exists(cred: Partial<UserCred>): Promise<boolean> {
-    const user = await this.userModel.findOne({ ...cred }).exec();
-    return user !== undefined;
+    const user = await this.userModel.exists({ ...cred }).exec();
+    return user !== null;
   }
 
   async get({
@@ -33,5 +33,9 @@ export class UserRepoImpl implements UserRepo {
     const user = await this.userModel.findOne(query).exec();
     if (!user) return;
     return UserModel.toEntity.call(user) as User;
+  }
+
+  async update(userId: string, updates: Partial<User>): Promise<void> {
+    await this.userModel.updateOne({ id: userId }, { ...updates }).exec();
   }
 }
