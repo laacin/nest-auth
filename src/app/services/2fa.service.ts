@@ -17,15 +17,15 @@ export class TwoFactorService {
   constructor(@Inject(APP_NAME) private readonly app: string) {}
 
   create({ email }: CreateParams) {
-    const secret = generateSecret();
+    const otpSecret = generateSecret();
 
     const otpUri = generateURI({
       issuer: this.app,
       label: email,
-      secret,
+      secret: otpSecret,
     });
 
-    return { otpUri, secret };
+    return { otpUri, otpSecret };
   }
 
   async isValid({ otpSecret, otpCode }: VerifyParams) {
