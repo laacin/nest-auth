@@ -7,6 +7,10 @@ import { CACHING_SERVICE, USER_REPO } from '@domain/tokens';
 import { Inject, Injectable } from '@nestjs/common';
 import { hash, verify } from 'argon2';
 import type {
+  Create2FAIn,
+  Create2FAOut,
+  Enable2FAIn,
+  Enable2FAOut,
   OtpLoginIn,
   OtpLoginOut,
   RegisterIn,
@@ -62,7 +66,7 @@ export class AuthUseCase {
     }
 
     if (this.isRequired2fa({ user, deviceId })) {
-      await this.cache.store(`otp:session:${user.id}`, '1', 60);
+      await this.cache.store(`otp:session:${user.id}`, '1', 240);
       throw new Error('require 2FA');
     }
 
@@ -78,10 +82,10 @@ export class AuthUseCase {
   }: OtpLoginIn): Promise<OtpLoginOut> {
     const session = await this.cache.get(`otp:session:${userId}`, true);
     if (!session) throw new Error('unexpected 2FA login');
-    const remove = this.cache.remove(`otp:session:${userId}`);
+    await this.cache.remove(`otp:session:${userId}`);
 
     const user = await this.userRepo.get({ id: userId });
-    if (!user) throw new Error('invalid user');
+    if (!user) throw new Error('user not found');
     if (!user.otpSecret) throw new Error('2FA is not active');
     const { otpSecret } = user;
 
@@ -95,9 +99,30 @@ export class AuthUseCase {
       });
     }
 
-    await remove;
     const [access, refresh] = await this.token.create(user);
     return { access, refresh };
+  }
+
+  async create2FA({ userId }: Create2FAIn): Promise<Create2FAOut> {
+    const user = await this.userRepo.get({ id: userId });
+    if (!user) throw new Error('user not found');
+
+    const { otpSecret, otpUri } = this.otp.create({ email: user.email });
+
+    await this.cache.store(`otp:create:${userId}`, otpSecret, 3600);
+    return { otpUri };
+  }
+
+  async enable2FA({ userId, otpCode }: Enable2FAIn): Promise<Enable2FAOut> {
+    const otpSecret = await this.cache.get(`otp:create:${userId}`);
+    if (!otpSecret) throw new Error('unexpected 2FA activation request');
+    await this.cache.remove(`otp:create:${userId}`);
+
+    const isValid = await this.otp.isValid({ otpSecret, otpCode });
+    if (!isValid) throw new Error('invalid 2FA code');
+
+    await this.userRepo.update(userId, { otpSecret });
+    return { userId };
   }
 
   // internal use-cases
