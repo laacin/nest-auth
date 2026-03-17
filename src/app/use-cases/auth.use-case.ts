@@ -126,7 +126,7 @@ export class AuthUseCase {
   }
 
   // internal use-cases
-  isRequired2fa({
+  private isRequired2fa({
     user,
     deviceId,
   }: {
