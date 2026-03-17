@@ -1,9 +1,9 @@
 import { TwoFactorService } from '@app/services/2fa.service';
-import { CachingService } from '@app/services/caching.service';
 import { TokenService } from '@app/services/token.service';
 import { ROLE, User } from '@domain/entities/user.entity';
+import type { CachingService } from '@domain/services/caching.service';
 import type { UserRepo } from '@domain/repos/user.repo';
-import { USER_REPO } from '@domain/tokens';
+import { CACHING_SERVICE, USER_REPO } from '@domain/tokens';
 import { Inject, Injectable } from '@nestjs/common';
 import { hash, verify } from 'argon2';
 import type {
@@ -19,9 +19,9 @@ import type {
 export class AuthUseCase {
   constructor(
     @Inject(USER_REPO) private readonly userRepo: UserRepo,
+    @Inject(CACHING_SERVICE) private readonly cache: CachingService,
     @Inject() private readonly token: TokenService,
     @Inject() private readonly otp: TwoFactorService,
-    @Inject() private readonly cache: CachingService,
   ) {}
 
   async register({
@@ -62,7 +62,7 @@ export class AuthUseCase {
     }
 
     if (this.isRequired2fa({ user, deviceId })) {
-      await this.cache.setOtpPending(user.id, 15000);
+      await this.cache.store(`otp:session:${user.id}`, '1', 60);
       throw new Error('require 2FA');
     }
 
@@ -76,9 +76,9 @@ export class AuthUseCase {
     saveDeviceId,
     deviceId,
   }: OtpLoginIn): Promise<OtpLoginOut> {
-    if (!(await this.cache.isOtpPending(userId))) {
-      throw new Error('unexpected 2FA login');
-    }
+    const session = await this.cache.get(`otp:session:${userId}`, true);
+    if (!session) throw new Error('unexpected 2FA login');
+    const remove = this.cache.remove(`otp:session:${userId}`);
 
     const user = await this.userRepo.get({ id: userId });
     if (!user) throw new Error('invalid user');
@@ -95,7 +95,7 @@ export class AuthUseCase {
       });
     }
 
-    await this.cache.setOtpDone(userId);
+    await remove;
     const [access, refresh] = await this.token.create(user);
     return { access, refresh };
   }

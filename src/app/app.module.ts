@@ -4,7 +4,6 @@ import { AppConfig, resolveKey } from './app.config';
 import { JwtModule } from '@nestjs/jwt';
 import { TokenService } from './services/token.service';
 import { TwoFactorService } from './services/2fa.service';
-import { CachingService } from './services/caching.service';
 import { APP_NAME } from '@domain/tokens';
 
 @Module({})
@@ -21,13 +20,7 @@ export class AppModule {
     return {
       imports: [jwtModule, ...cfg.dependencies],
       module: AppModule,
-      providers: [
-        TokenService,
-        TwoFactorService,
-        CachingService,
-        AuthUseCase,
-        AppName,
-      ],
+      providers: [TokenService, TwoFactorService, AuthUseCase, AppName],
       exports: [AuthUseCase],
     };
   }
